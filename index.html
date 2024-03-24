@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      // Define fetchProducts outside of the jQuery ready function to make it globally accessible
+      async function fetchProducts(page = 1, limit = 10) {
+        const url = `https://dummyjson.com/products?skip=${(page - 1) * limit}&limit=${limit}`;
+        try {
+          let response = await fetch(url);
+          let data = await response.json();
+          createTable(data.products);
+          setupPagination(data.total, limit, page);
+        } catch (e) {
+          console.error("Error fetching products:", e);
+        }
+      }
+
+      $(() => {
+        fetchProducts(); // Initial fetch for page 1
+
+        window.fetchProducts = fetchProducts; // Make fetchProducts globally accessible for pagination
+      });
+
+      function createTable(products) {
+        let table = `<table class="table-auto w-full"><thead><tr class="bg-gray-100">
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Price</th>
+          <th class="px-4 py-2">Category</th>
+        </tr></thead><tbody>`;
+        products.forEach(product => {
+          table += `<tr>
+            <td class="border px-4 py-2">${product.id}</td>
+            <td class="border px-4 py-2">${product.title}</td>
+            <td class="border px-4 py-2">$${product.price}</td>
+            <td class="border px-4 py-2">${product.category}</td>
+          </tr>`;
+        });
+        table += `</tbody></table>`;
+        $("#myTable").html(table);
+      }
+
+      function setupPagination(total, limit, currentPage) {
+        let pageCount = Math.ceil(total / limit);
+        let paginationHtml = '<div class="flex justify-center mt-4">';
+        for (let i = 1; i <= pageCount; i++) {
+          const activeClass = i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 hover:bg-blue-500 hover:text-white';
+          paginationHtml += `<button class="mx-1 px-4 py-2 border ${activeClass}" onclick="fetchProducts(${i})">${i}</button>`;
+        }
+        paginationHtml += '</div>';
+        $("#pagination").html(paginationHtml);
+      }
+    </script>
+</head>
+<body>
+    <div id="myTable" class="my-4"></div>
+    <div id="pagination"></div>
+</body>
+</html>
